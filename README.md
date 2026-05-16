@@ -12,7 +12,7 @@ multi-start, then iterated local search with (1,2)-swaps.
 ## Project Layout
 
 ```
-mwis-solver/
+Hackathon-squad---MWIS-Solver/
 ├── README.md
 ├── solve.cpp           # the solver (single source file)
 ├── build.sh            # build script
@@ -28,12 +28,12 @@ mwis-solver/
 │   ├── graph01.in
 │   ├── ...
 │   └── graph10.in
-└── answers/            # (you create this) where -o output files land
+└── outputs/            # (you create this) where -o output files land
     ├── output01.out
     └── ...
 ```
 
-The `test10/` and `answers/` folders are conventions used in this README — you
+The `test10/` and `outputs/` folders are conventions used in this README — you
 can name them anything you want, just match the paths in your commands.
 
 ---
@@ -64,25 +64,25 @@ The solver is invoked directly with two flags:
 ### Your standard command
 
 ```bash
-./build/solve -i test10/graph10.in -o answers/output10.out
+./build/solve -i test10/graph10.in -o outputs/output10.out
 ```
 
 This solves `test10/graph10.in` for 5 minutes (the default) and writes the
-full answer to `answers/output10.out`.
+full answer to `outputs/output10.out`.
 
-The `answers/` folder needs to exist before you run the command:
+The `outputs/` folder needs to exist before you run the command:
 
 ```bash
-mkdir -p answers
+mkdir -p outputs
 ```
 
 ### Running all 10 graphs in sequence
 
 ```bash
-mkdir -p answers
+mkdir -p outputs
 for i in 01 02 03 04 05 06 07 08 09 10; do
     echo "=== graph${i} ==="
-    ./build/solve -i test10/graph${i}.in -o answers/output${i}.out
+    ./build/solve -i test10/graph${i}.in -o outputs/output${i}.out
 done
 ```
 
@@ -93,8 +93,8 @@ appear when each one finishes.
 ### With a custom time budget
 
 ```bash
-./build/solve -i test10/graph10.in -o answers/output10.out -t 60   # 1 minute
-./build/solve -i test10/graph10.in -o answers/output10.out -t 600  # 10 minutes
+./build/solve -i test10/graph10.in -o outputs/output10.out -t 60   # 1 minute
+./build/solve -i test10/graph10.in -o outputs/output10.out -t 600  # 10 minutes
 ```
 
 ---
@@ -153,10 +153,10 @@ DONE in 297.0s
 Total skill rating: 2867204193112
 Team size:          15301
 
-Selected coders written to: answers/output10.out
+Selected coders written to: outputs/output10.out
 ```
 
-**Answer file (`answers/output10.out`) — the actual saved deliverable:**
+**Answer file (`outputs/output10.out`) — the actual saved deliverable:**
 
 ```
 Total skill rating: 2867204193112
@@ -191,18 +191,18 @@ order. This is what would have flooded your terminal if not piped to a file.
 Quick verification (short budgets are plenty for these):
 
 ```bash
-mkdir -p answers
-./build/solve -i examples/tiny.in        -o answers/tiny.out         -t 5
-./build/solve -i examples/star.in        -o answers/star.out         -t 5
-./build/solve -i examples/adversarial.in -o answers/adversarial.out  -t 10
+mkdir -p outputs
+./build/solve -i examples/tiny.in        -o outputs/tiny.out         -t 5
+./build/solve -i examples/star.in        -o outputs/star.out         -t 5
+./build/solve -i examples/adversarial.in -o outputs/adversarial.out  -t 10
 ```
 
 Check the results:
 
 ```bash
-head answers/tiny.out
-head answers/star.out
-head answers/adversarial.out
+head outputs/tiny.out
+head outputs/star.out
+head outputs/adversarial.out
 ```
 
 ---
@@ -214,7 +214,7 @@ After running a batch, extract the totals quickly:
 ```bash
 for i in 01 02 03 04 05 06 07 08 09 10; do
     printf "graph%s: " "$i"
-    head -1 "answers/output${i}.out" | awk '{print $NF}'
+    head -1 "outputs/output${i}.out" | awk '{print $NF}'
 done
 ```
 
@@ -255,7 +255,7 @@ within 0.5–2% of optimal (often the true optimum on structured instances).
 | `g++: command not found` | Install MinGW-w64 (Windows) or Xcode CLT (macOS) |
 | Segfault on Windows | Make sure `build.sh` still has `-static -static-libgcc -static-libstdc++` flags |
 | `Cannot open input file: ...` | Path is wrong; check you're in the project root and the file exists |
-| `Cannot open output file: ...` | The output directory doesn't exist — run `mkdir -p answers` first |
+| `Cannot open output file: ...` | The output directory doesn't exist — run `mkdir -p outputs` first |
 | `N out of range [1, 200000]` | The constraint is hard-coded in `solve.cpp`; raise it there if you need larger |
 | No output appearing for minutes | Normal — output only appears when the time budget expires. Progress lines on screen confirm it's working |
 
