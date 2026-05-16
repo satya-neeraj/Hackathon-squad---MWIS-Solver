@@ -1,12 +1,11 @@
 # MWIS Solver — Manual Input
 
 A standalone solver for the **Hackathon Squad** problem (Maximum Weight
-Independent Set on a conflict graph). Edit your graph in `input.in`, run one
-command, get the answer within 5 minutes.
+Independent Set on a conflict graph). Drop your graph file into the project,
+run one command, get the answer within 5 minutes.
 
-Single-file solver, no dependencies beyond `g++`. Same algorithm as a full
-benchmark suite (GWMIN + GWMIN2 multi-start, iterated local search with
-(1,2)-swaps), wrapped in a tiny CLI.
+Single-file C++ solver, no external dependencies. Algorithm: GWMIN + GWMIN2
+multi-start, then iterated local search with (1,2)-swaps.
 
 ---
 
@@ -15,98 +14,88 @@ benchmark suite (GWMIN + GWMIN2 multi-start, iterated local search with
 ```
 mwis-solver/
 ├── README.md
-├── solve.cpp           # the solver (single file, ~400 lines)
-├── build.sh / build.bat
-├── run.sh   / run.bat
-├── input.in            # YOUR graph goes here (edit me!)
-├── build/              # compiled binary lands here
-└── examples/
-    ├── tiny.in
-    ├── star.in
-    └── adversarial.in
+├── solve.cpp           # the solver (single source file)
+├── build.sh            # build script
+├── build.bat           # build script (Windows cmd)
+├── input.in            # template graph file
+├── build/              # compiled binary goes here
+│   └── .gitkeep
+├── examples/           # tiny pre-built test cases
+│   ├── tiny.in
+│   ├── star.in
+│   └── adversarial.in
+├── test10/             # (optional) larger test bundle
+│   ├── graph01.in
+│   ├── ...
+│   └── graph10.in
+└── answers/            # (you create this) where -o output files land
+    ├── output01.out
+    └── ...
 ```
 
----
-
-## Prerequisites
-
-- **g++** with C++17 support (any modern GCC: 9 or later)
-- Windows users: install MinGW-w64 (the build uses `-static` flags so DLL
-  conflicts are sidestepped automatically)
+The `test10/` and `answers/` folders are conventions used in this README — you
+can name them anything you want, just match the paths in your commands.
 
 ---
 
-## Quick Start
+## Build (one-time setup)
 
-### 1. Build (one time)
-
-**Linux / macOS / Git Bash on Windows:**
 ```bash
 bash build.sh
 ```
 
-**Windows cmd:**
-```cmd
-build.bat
-```
+(`build.bat` on Windows cmd.) Produces `build/solve` or `build/solve.exe`.
+The build uses static linking so the binary has no runtime DLL dependencies.
 
-Produces `build/solve` (or `build/solve.exe` on Windows). Takes a few seconds.
+---
 
-### 2. Verify with a built-in example
+## Usage
 
-```bash
-bash run.sh examples/adversarial.in 5
-```
-
-Expected (last lines on screen):
-
-```
-========== Answer ==========
-
-Total skill rating: 10000
-Team size:          10
-
-Selected coders written to: adversarial.out
-```
-
-And `adversarial.out` will contain:
-
-```
-Total skill rating: 10000
-Team size:          10
-Selected coders:    2 3 4 5 6 7 8 9 10 11
-```
-
-If you see that, setup is complete.
-
-### 3. Solve your own graph
-
-Open `input.in` in any text editor, replace the example block with your
-graph (format documented inside the file), save, then run:
+The solver is invoked directly with two flags:
 
 ```bash
-bash run.sh
+./build/solve -i <input_file> -o <output_file>
 ```
 
-That uses `input.in` as input and 300-second (5-minute) budget. Progress
-prints every 5 seconds while solving. The summary appears on screen at the
-end, and the full answer (including selected coder IDs) is written to
-`input.out`.
+- `-i <input_file>` — graph to solve (required)
+- `-o <output_file>` — where to write the full answer (recommended)
+- `-t <seconds>` — time budget; defaults to **300 (= 5 minutes)** if omitted
 
-To pass a different time limit:
+### Your standard command
 
 ```bash
-bash run.sh input.in 60        # 1-minute budget
-bash run.sh input.in 600       # 10-minute budget
+./build/solve -i test10/graph10.in -o answers/output10.out
 ```
 
-To control the output filename:
+This solves `test10/graph10.in` for 5 minutes (the default) and writes the
+full answer to `answers/output10.out`.
+
+The `answers/` folder needs to exist before you run the command:
 
 ```bash
-bash run.sh input.in 300 my_answer.out
+mkdir -p answers
 ```
 
-Windows cmd: replace `bash run.sh` with `run.bat`, same arguments.
+### Running all 10 graphs in sequence
+
+```bash
+mkdir -p answers
+for i in 01 02 03 04 05 06 07 08 09 10; do
+    echo "=== graph${i} ==="
+    ./build/solve -i test10/graph${i}.in -o answers/output${i}.out
+done
+```
+
+Each iteration takes ~5 minutes, so the full sweep is roughly **50 minutes**.
+Progress prints to your terminal during each run; the summary and answer file
+appear when each one finishes.
+
+### With a custom time budget
+
+```bash
+./build/solve -i test10/graph10.in -o answers/output10.out -t 60   # 1 minute
+./build/solve -i test10/graph10.in -o answers/output10.out -t 600  # 10 minutes
+```
 
 ---
 
@@ -121,120 +110,121 @@ u_2 v_2
 u_M v_M
 ```
 
-- `N` — number of coders, between 1 and 200,000
-- `M` — number of rivalry pairs, between 0 and `N(N-1)/2`
-- `S_i` — skill rating of coder `i`, between 1 and 1,000,000,000
-- `(u, v)` — coder `u` and coder `v` refuse to work together
+- `N` — number of coders (1 to 200,000)
+- `M` — number of rivalry pairs
+- `S_i` — skill rating of coder `i` (1 to 1,000,000,000)
+- `(u, v)` — coder `u` and `v` refuse to work together
 
-**Rules:**
-- Coders are numbered starting at 1.
-- Lines starting with `#` are comments and ignored.
+Rules:
+- Coders are numbered from 1.
+- Lines starting with `#` are comments and are ignored.
 - Blank lines are fine.
-- Self-loops (`u == v`) and duplicate edges are silently dropped.
 
-See `input.in` for an annotated template, and `examples/` for ready-to-run
-graphs.
-
----
-
-## Running the Solver Directly
-
-If you'd rather not use `run.sh`, call the binary yourself:
-
-```bash
-./build/solve -i input.in                 # 300s budget, answer to stdout
-./build/solve -i input.in -t 60           # custom budget
-./build/solve -i input.in -o answer.out   # write answer to file
-./build/solve -i input.in -t 300 -o answer.out
-
-./build/solve < input.in                  # pipe via stdin
-cat input.in | ./build/solve
-
-./build/solve                             # type interactively, Ctrl+D when done
-./build/solve -h                          # show help
-```
-
-On Windows replace `./build/solve` with `build\solve.exe`.
-
-### Flags
-
-| Flag | Purpose | Default |
-|---|---|---|
-| `-i FILE` | read graph from `FILE` | read from stdin |
-| `-t SECONDS` | time budget (1 to any value) | 300 (5 min) |
-| `-o FILE` | write the full answer to `FILE` | write to stdout |
-| `-h`, `--help` | show usage | — |
+See `input.in` and the `examples/` folder for ready-to-use samples.
 
 ---
 
 ## What You See vs. What's Saved
 
-The solver splits output cleanly across two channels:
+The solver uses two output streams so big answer lists don't flood your terminal.
 
-**Terminal (stderr):**
-- Banner with N, M, time budget
-- Progress lines every ~5 seconds
-- Final summary: total skill rating + team size
-- Note about where the answer file was saved
-
-**Answer (stdout or `-o FILE`):**
-- `Total skill rating: <number>`
-- `Team size: <number>`
-- `Selected coders:` followed by the full list of chosen coder IDs
-
-The "selected coders" list can be very long (tens of thousands of IDs at
-N=200,000), which is why it's only written to a file or piped output — it
-won't flood your terminal.
-
-### Example session
+**Terminal (stderr) — visible while solving:**
 
 ```
-$ bash run.sh input.in 300
-Reading graph from input.in...
+Reading graph from test10/graph10.in...
 
 ========== MWIS Solver ==========
   Coders (N):     200000
-  Rivalries (M):  399997
+  Rivalries (M):  5999088
   Time budget:    300 seconds
 ---------------------------------
 Solving... (progress every ~5s)
 
   [   0s / 297s] best = 0  team_size = 0
-  [   5s / 297s] best = 52934821093001  team_size = 88412  (GWMIN multi-start)
-  [  10s / 297s] best = 53087412390442  team_size = 88641  (GWMIN2 multi-start)
-  [  15s / 297s] best = 53187912001234  team_size = 88720
+  [   5s / 297s] best = 2745001234567  team_size = 14998  (GWMIN multi-start)
+  [  10s / 297s] best = 2812998112900  team_size = 15187  (GWMIN2 multi-start)
   ...
-  [ 295s / 297s] best = 53298373822328  team_size = 89244  (done)
+  [ 295s / 297s] best = 2867204193112  team_size = 15301  (done)
 
 ---------------------------------
 DONE in 297.0s
 ========== Answer ==========
 
-Total skill rating: 53298373822328
-Team size:          89244
+Total skill rating: 2867204193112
+Team size:          15301
 
-Selected coders written to: input.out
-Answer saved to: input.out
+Selected coders written to: answers/output10.out
 ```
 
-Then `input.out` contains all three answer lines including the coder IDs.
+**Answer file (`answers/output10.out`) — the actual saved deliverable:**
+
+```
+Total skill rating: 2867204193112
+Team size:          15301
+Selected coders:    1 5 9 12 23 ... 199987
+```
+
+The "Selected coders" line is the full list of chosen coder IDs in ascending
+order. This is what would have flooded your terminal if not piped to a file.
 
 ---
 
-## Built-in Examples
+## Flags Summary
 
-| File | Description |
-|---|---|
-| `examples/tiny.in` | 5-coder path graph (sanity check) |
-| `examples/star.in` | Hub vs. four leaves — leaves should win (120 > 100) |
-| `examples/adversarial.in` | Trojan hub — forces correct heuristic behavior (10000, not 1001) |
+| Flag | Purpose | Default |
+|---|---|---|
+| `-i FILE` | input graph file | reads from stdin |
+| `-o FILE` | output answer file | writes to stdout |
+| `-t SECONDS` | time budget in seconds | `300` (5 minutes) |
+| `-h`, `--help` | show usage | — |
 
-Run any of them quickly:
+---
+
+## Built-in Examples (sanity checks)
+
+| File | What it tests | Expected answer |
+|---|---|---|
+| `examples/tiny.in` | 5-coder path graph | weight 90, set `{1, 3, 5}` |
+| `examples/star.in` | Hub vs four leaves | weight 120, set `{2, 3, 4, 5}` |
+| `examples/adversarial.in` | Trojan-hub trap | weight 10000, set `{2..11}` |
+
+Quick verification (short budgets are plenty for these):
 
 ```bash
-bash run.sh examples/tiny.in 5
-bash run.sh examples/star.in 5
-bash run.sh examples/adversarial.in 10
+mkdir -p answers
+./build/solve -i examples/tiny.in        -o answers/tiny.out         -t 5
+./build/solve -i examples/star.in        -o answers/star.out         -t 5
+./build/solve -i examples/adversarial.in -o answers/adversarial.out  -t 10
+```
+
+Check the results:
+
+```bash
+head answers/tiny.out
+head answers/star.out
+head answers/adversarial.out
+```
+
+---
+
+## Reading Just the Headline Number
+
+After running a batch, extract the totals quickly:
+
+```bash
+for i in 01 02 03 04 05 06 07 08 09 10; do
+    printf "graph%s: " "$i"
+    head -1 "answers/output${i}.out" | awk '{print $NF}'
+done
+```
+
+Output:
+
+```
+graph01: 53298373822328
+graph02: 10732811200499
+...
+graph10: 2867204193112
 ```
 
 ---
@@ -242,18 +232,19 @@ bash run.sh examples/adversarial.in 10
 ## How the Solver Works (brief)
 
 1. **Multi-start construction** — six greedy starts: three GWMIN (score by
-   `w/(1+deg)`) and three GWMIN2 (score by `w/(w+ΣwN)`), with mild
-   randomization noise. The best result is kept as the seed.
-2. **Local search** — alternates 1-improvement (add any free vertex) and
-   (1,2)-swap (replace one vertex with two non-adjacent ones of higher
-   combined weight) until no improvement is found.
-3. **Iterated local search** — repeatedly perturbs the solution by
-   force-inserting random vertices (evicting their neighbors), then
-   re-runs local search. Accepts if better, reverts if worse. Perturbation
-   strength adapts when progress stalls.
+   `w/(1+deg)`) and three GWMIN2 (score by `w/(w+ΣwN)`), with randomized
+   noise. The best of all six runs becomes the ILS seed.
+2. **Local search** — repeatedly applies 1-improvement (add any vertex with
+   no neighbor in the set) and (1,2)-swap (replace one in-set vertex with two
+   non-adjacent vertices of greater combined weight) until no further gain.
+3. **Iterated local search (ILS)** — perturbs the current solution by
+   force-inserting random vertices, then re-runs local search. Accepts on
+   improvement, reverts on regression. Perturbation strength adapts when
+   progress stalls. Continues until the time budget runs out.
 
-Memory: O(N + M). Time: bounded by the configured budget. Result: typically
-within 0.5–2% of optimal on random graphs, often optimal on structured ones.
+Memory: O(N + M). Time: bounded strictly by the configured budget.
+Result quality on N=200,000 graphs with the full 5-minute budget: typically
+within 0.5–2% of optimal (often the true optimum on structured instances).
 
 ---
 
@@ -261,24 +252,18 @@ within 0.5–2% of optimal on random graphs, often optimal on structured ones.
 
 | Symptom | Fix |
 |---|---|
-| `g++: command not found` | Install MinGW-w64 (Windows) or Xcode Command Line Tools (macOS); see the build instructions for your platform |
-| Segfault on Windows even after build succeeds | Caused by mixed C-runtime DLLs in some MinGW builds; the `-static -static-libgcc -static-libstdc++` flags in `build.sh` should prevent this. If you've removed those flags, put them back |
-| `Cannot open input file: ...` | Make sure you're in the project directory and the file path is correct |
-| `N out of range [1, 200000]` | The constraint is hard-coded; raise it in `solve.cpp` if you need larger |
-| Output stops mid-run | The progress lines are on stderr; if you piped only stdout to a file (`> something`), progress still prints to the terminal — the answer file is being written normally |
-| Terminal flooded with thousands of coder IDs | You ran without `-o` or `run.sh`; the answer printed to stdout. Use `-o FILE` (or `run.sh` which auto-creates a `.out` file) |
+| `g++: command not found` | Install MinGW-w64 (Windows) or Xcode CLT (macOS) |
+| Segfault on Windows | Make sure `build.sh` still has `-static -static-libgcc -static-libstdc++` flags |
+| `Cannot open input file: ...` | Path is wrong; check you're in the project root and the file exists |
+| `Cannot open output file: ...` | The output directory doesn't exist — run `mkdir -p answers` first |
+| `N out of range [1, 200000]` | The constraint is hard-coded in `solve.cpp`; raise it there if you need larger |
+| No output appearing for minutes | Normal — output only appears when the time budget expires. Progress lines on screen confirm it's working |
 
 ---
 
-## Notes on Scale
+## Scale Notes
 
-This solver is built to handle the full problem ceiling:
-
-- **N up to 200,000 coders**
-- **M up to ~10 million rivalries** (practical limit; the theoretical
-  `N(N-1)/2` doesn't fit in memory anyway)
-- Memory stays under ~200 MB at maximum scale
-- Result quality: ~99% of optimal at N=200,000 with the full 5-minute budget
-
-For very large stdin inputs, prefer `-i FILE` over `< file` — file-based
-reading is faster than the slower stdin-pipe path.
+- **N up to 200,000 coders**, **M up to ~10 million rivalries** (memory ceiling)
+- Peak memory at maximum scale: ~200 MB
+- The 5-minute budget gives near-optimal results on virtually all instances
+  in the supported size range
