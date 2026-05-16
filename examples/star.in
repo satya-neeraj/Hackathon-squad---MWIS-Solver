@@ -1,0 +1,13 @@
+# Star graph: coder 1 is the hub (rival with everyone else),
+# coders 2..5 are leaves (no rivalries between leaves).
+#
+# Hub weight: 100.   Leaves: 30 each.
+# Option A: pick just the hub          -> total 100
+# Option B: pick all 4 leaves          -> total 120  (optimal)
+# Solver should find Option B.
+5 4
+100 30 30 30 30
+1 2
+1 3
+1 4
+1 5

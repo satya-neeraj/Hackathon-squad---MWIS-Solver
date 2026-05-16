@@ -1,0 +1,9 @@
+# Tiny path graph: 5 coders, 4 rivalries
+# Coders 1-2-3-4-5 in a chain (each rivals with their neighbor).
+# Optimal team: {1, 3, 5} with total skill 10 + 30 + 50 = 90.
+5 4
+10 20 30 40 50
+1 2
+2 3
+3 4
+4 5
